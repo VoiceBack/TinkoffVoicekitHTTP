@@ -1,0 +1,29 @@
+{
+  "name": "tinkoffvoicekithttp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VoiceBack/TinkoffVoicekitHTTP.git"
+  },
+  "author": "Artem Lipovoy <artemlipovoy@yandex.ru>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VoiceBack/TinkoffVoicekitHTTP/issues"
+  },
+  "homepage": "https://github.com/VoiceBack/TinkoffVoicekitHTTP#readme",
+  "dependencies": {
+    "config": "^3.3.1",
+    "express": "^4.17.1",
+    "express-validator": "^6.5.0",
+    "multer": "^1.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
