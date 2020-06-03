@@ -4,7 +4,7 @@ const app = express();
 
 app.use('/voicekit', require('./routes/voicekit.routes'));
 
-const PORT = config.get('port') || 3001;
+const PORT = process.env.PORT || config.get('port');
 async function start(){
     try{
         app.listen(PORT, ()=>{
