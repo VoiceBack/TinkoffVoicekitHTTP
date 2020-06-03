@@ -5,7 +5,7 @@ const app = express();
 
 //const ngrok = require('ngrok');
 
-app.use(bodyParser.json({limit: '10mb', extended: true}));
+app.use(bodyParser.json({limit: '50mb', extended: true}));
 app.use('/voicekit', require('./routes/voicekit.routes'));
 
 const PORT = process.env.PORT || config.get('port');
