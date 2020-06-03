@@ -1,47 +1,45 @@
 const {Router} = require('express');
-const multer = require('multer');
 const config = require('config');
-
+const fs = require('fs');
+const wav = require('node-wav');
 const checkAccess = require('../middlewares/access.middleware');
 
 const recognize = require('../voicekit/recognize');
 
-const util = require('util');
 
 const router = Router();
 
 // /voicekit/recognize
 
-const imgFilter = (req, file, cb) => {
-    if(file.mimetype === "audio/wav"){
-        cb(null, true);
-    }
-    else{
-        cb(null, false);
-    }
-}
-
-const storageConfig = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads');
-    },
-    filename: (req, file, cb) =>{
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({
-    storage:storageConfig,
-    fileFilter: imgFilter
-});
-
 const setDefaultParams = body => {
     if(!body.encoding)
         body.encoding = config.get('DEFAULT_ENCODING');
-    if(!body.rate)
-        body.rate = config.get('DEFAULT_RATE');
     if(!body.numChannels)
         body.numChannels = config.get('DEFAULT_NUM_CHANNELS');
+}
+
+const getFileFromBase64 = async (base64, timeout) => {
+    return new Promise((resolve,reject)=>{
+        const fName = `uploads/${Date.now()}.wav`
+        fs.writeFile(fName, base64, {encoding: 'base64'}, (err)=>{
+            if(err) {
+                fs.unlinkSync(fName);
+                reject(err);
+            }
+            else {
+                try {
+                    const buffer = fs.readFileSync(fName);
+                    const result = wav.decode(buffer);
+                    resolve({
+                        filePath: fName,
+                        rate: result.sampleRate
+                    });
+                }catch(e){
+                    reject('Invalid .wav file')
+                }
+            }
+        })
+    });
 }
 
 const parseResponse = response => {
@@ -67,23 +65,27 @@ const parseResponse = response => {
 router.post(
     '/recognize',
     checkAccess,
-    upload.single('record'),
     async (req,res)=>{
-        if(!req.file){
-            return await res.status(400).json({ message: 'Не указан файл для распознавания'});
+        if (!req.body.base64)
+            return await res.status(400).json({message: 'Empty base64 field'});
+
+        try {
+            const {filePath, rate} = await getFileFromBase64(req.body.base64, 10);
+            setDefaultParams(req.body);
+            const {encoding, numChannels} = req.body;
+            recognize(filePath, encoding, rate, numChannels)
+                .then(r => {
+                    const result = parseResponse(r);
+                    if (!result)
+                        return res.status(400).json({message: "Voiceless audio"});
+                    return res.status(200).json({result: result});
+                })
+                .catch(err => {
+                    return res.status(400).json({message: err});
+                })
+        }catch(e){
+            return await res.status(401).json({message: e});
         }
-        setDefaultParams(req.body);
-        const {encoding, numChannels, rate} = req.body;
-        recognize(req.file.path, encoding, rate, numChannels)
-            .then(r=>{
-                const result = parseResponse(r);
-                if(!result)
-                    return res.status(400).json({ message: "Voiceless audio" });
-                return res.status(200).json({ result: result });
-            })
-            .catch(err=>{
-                return res.status(400).json({ message: err });
-            })
     }
 );
 
