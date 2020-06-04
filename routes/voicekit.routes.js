@@ -66,6 +66,7 @@ router.post(
     '/recognize',
     checkAccess,
     async (req,res)=>{
+        req.setTimeout(500000);
         if (!req.body.base64)
             return await res.status(400).json({message: 'Empty base64 field'});
 
