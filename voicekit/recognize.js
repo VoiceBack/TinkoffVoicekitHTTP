@@ -1,6 +1,5 @@
 const fs = require('fs');
 const {createSttClient, checkWavFormat} = require('./common.js');
-
 const wav = require('wav');
 const concat = require('concat-stream');
 
